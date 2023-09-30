@@ -35,6 +35,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'subr-x)
 
 (defvar ekt/key-translation-map-timer nil
   "Store the timer that watches system keyboard layout and updates
