@@ -1,4 +1,4 @@
-#+title: EKT
+#+title: EKT / Emacs Keyboard Translation
 
 * Description
 
