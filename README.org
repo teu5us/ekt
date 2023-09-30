@@ -1,0 +1,64 @@
+#+title: EKT
+
+* Description
+
+Use Emacs and your keyboard layout with xkb-switch.
+
+Note: you need xkb-switch to be available in PATH.
+
+This package helps you build keymaps to substitute ~key-translation-map~.
+
+For defining translation maps see ~ekt/make-translation~ and ekt-ru.el.
+
+If you only use one keyboard layout beside US, you can just substitute
+~key-translation-map~ yourselves.
+
+Otherwise, try automated switching.  Emacs runs xkb-switch every second to
+check your active layout and activate the right translation map, which then
+translates key presses to bindings that Emacs knows.
+
+To start automated key translation, run ~ekt/start-layout-watcher~. To stop,
+execute ~ekt/stop-layout-watcher~. Please note that there may be a delay
+before new ~key-translation-map~ activation.
+
+* Installation
+
+
+** use-package / require
+
+Clone in your ~load-path~ first.
+
+*** require
+#+begin_src emacs-lisp
+(require 'ekt)
+;; optional
+(require 'ekt-ru)
+#+end_src
+
+*** use-package
+#+begin_src emacs-lisp
+(use-package ekt
+    :hook (after-init . ekt/start-layout-watcher)
+    ;; optional init
+    :init
+    (require 'ekt-ru))
+#+end_src
+
+** doom emacs
+
+*** packages.el
+
+  #+begin_src emacs-lisp
+  (package! ekt
+    :recipe (:host github :repo "teu5us/ekt"))
+  #+end_src
+
+*** config.el
+
+#+begin_src emacs-lisp
+(use-package! ekt
+    :hook (after-init . ekt/start-layout-watcher)
+    ;; optional init
+    :init
+    (require 'ekt-ru))
+#+end_src
