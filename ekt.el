@@ -7,7 +7,7 @@
 ;; Version: 0.0.1
 ;; Keywords: convenience i18n languages
 ;; Homepage: https://github.com/suess/ekt
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "24.4"))
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -35,7 +35,6 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 's)
 
 (defvar ekt/key-translation-map-timer nil
   "Store the timer that watches system keyboard layout and updates
@@ -75,7 +74,7 @@
 
 (defun ekt/get-lang ()
   "Get system keyboard layout."
-  (s-trim (shell-command-to-string "xkb-switch")))
+  (string-trim (shell-command-to-string "xkb-switch")))
 
 (defun ekt/update-key-translation-map ()
   "Substitute `key-translation-map'."
