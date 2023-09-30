@@ -37,11 +37,17 @@ Clone in your ~load-path~ first.
 
 *** use-package
 #+begin_src emacs-lisp
+;; autoswitching
 (use-package ekt
     :hook (after-init . ekt/start-layout-watcher)
     ;; optional init
     :init
     (require 'ekt-ru))
+
+;; one layout
+(use-package ekt-ru
+  :config
+  (setq key-translation-map ekt/ru-key-translation-map))
 #+end_src
 
 ** doom emacs
