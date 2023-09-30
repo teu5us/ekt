@@ -90,6 +90,7 @@
        (cancel-timer ekt/key-translation-map-timer)
        (setq ekt/key-translation-map-timer nil)))
 
+;;;###autoload
 (defun ekt/start-layout-watcher ()
   "Start automatic `key-translation-map' substitution."
   (interactive)
@@ -129,6 +130,7 @@
              finally (return (list keymap
                                    (ekt/-make-key-translation-map from-list))))))
 
+;;;###autoload
 (defun ekt/make-translation (lang from to)
   "Create maps for translation and `key-translation-map' substitution, then
 store their symbols in appropriate tables.
