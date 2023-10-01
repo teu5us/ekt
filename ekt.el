@@ -151,17 +151,40 @@ FROM and TO must have the same length"
 (defvar ekt/*translate* t
   "Set to nil to avoid translation, see `ekt/read-key-wrapper'.")
 
+(defun ekt/-in-evil-mode ()
+  (and (boundp 'evil-mode) evil-mode))
+
+(defun ekt/-emacs-read-mode-checks ()
+  (and (not (ekt/-in-evil-mode))
+       (not (derived-mode-p 'prog-mode))
+       (not (derived-mode-p 'text-mode))))
+
+(defun ekt/-emacs-edit-mode-checks (modifiers)
+  (and (not (ekt/-in-evil-mode))
+       (not modifiers)
+       (or (derived-mode-p 'prog-mode)
+           (derived-mode-p 'text-mode))))
+
+(defun ekt/-evil-mode-checks (modifiers)
+  (and (ekt/-in-evil-mode)
+       (not (or (and (evil-insert-state-p)
+                     (not modifiers))
+                (and (evil-emacs-state-p)
+                     (not modifiers)
+                     (or (derived-mode-p 'text-mode)
+                         (derived-mode-p 'prog-mode)))
+                (and (minibuffer-window-active-p (selected-window))
+                     (not modifiers))))))
+
 (defun ekt/-translate-event (e map)
   "Internal translation magic."
   (let* ((-e (if (stringp e)
                  (string-to-char e)
                (aref e 0)))
          (modifiers (remove 'shift (event-modifiers -e))))
-    (if (if (and (boundp 'evil-mode) evil-mode)
-            (not (or (and (not modifiers) (evil-insert-state-p))
-                     (and (not modifiers) (evil-emacs-state-p))
-                     (and (not modifiers) (minibuffer-window-active-p (selected-window)))))
-          modifiers)
+    (if (or (ekt/-evil-mode-checks modifiers)
+            (ekt/-emacs-edit-mode-checks modifiers)
+            (ekt/-emacs-read-mode-checks))
         (lookup-key map e)
       e)))
 
