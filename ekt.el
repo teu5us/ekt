@@ -37,6 +37,16 @@
 (require 'cl-lib)
 (require 'subr-x)
 
+(defvar ekt/default-layout nil
+  "Default system layout to use. Mandatory to set before loading ekt.")
+
+(defvar ekt/program
+  (cond
+   ((eq system-type 'darwin) "im-select")
+   ((member system-type '(windows-nt cygwin)) "im-select.exe")
+   (t "xkb-switch"))
+  "The program to get active system keyboard layout.")
+
 (defvar ekt/key-translation-map-timer nil
   "Store the timer that watches system keyboard layout and updates
 `key-translation-map' accordingly.")
@@ -69,13 +79,16 @@
   "Maps for `key-translation-map' substitution.")
 
 ;; Backup the original `key-translation-map'
-(defvar ekt/us-key-translation-map (copy-keymap key-translation-map)
+(defvar ekt/default-key-translation-map (copy-keymap key-translation-map)
   "Backup the `key-translation-map' we have after launching Emacs.")
-(setf (gethash "us" ekt/key-translation-maps) 'ekt/us-key-translation-map)
+(if ekt/default-layout
+  (setf (gethash ekt/default-layout ekt/key-translation-maps)
+        'ekt/default-key-translation-map)
+  (warn "`ekt/default-layout' not set!"))
 
 (defun ekt/get-lang ()
   "Get system keyboard layout."
-  (string-trim (shell-command-to-string "xkb-switch")))
+  (string-trim (shell-command-to-string ekt/program)))
 
 (defun ekt/update-key-translation-map ()
   "Substitute `key-translation-map'."
@@ -116,7 +129,7 @@
    (ekt/-split-translation-string str)))
 
 (defun ekt/-make-key-translation-map (key-list)
-  (let ((new-key-translation-map (copy-keymap ekt/us-key-translation-map)))
+  (let ((new-key-translation-map (copy-keymap ekt/default-key-translation-map)))
     (dolist (key key-list)
       (define-key new-key-translation-map (kbd key) #'ekt/translate-event))
     new-key-translation-map))
@@ -195,7 +208,8 @@ FROM and TO must have the same length"
          (map (symbol-value (gethash lang ekt/translation-maps)))
          (evec (this-single-command-keys))
          (e (vector (aref evec (- (length evec) 1)))))
-    (if (string-equal "us" lang)
+    (if (or (null ekt/default-layout)
+            (string-equal ekt/default-layout lang))
         e
       (if (and map ekt/*translate*)
           (ekt/-translate-event e map)
