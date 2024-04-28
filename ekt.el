@@ -39,8 +39,10 @@
 
 (defvar ekt/use-ffi nil)
 (defvar ekt/libxkbswitch nil)
+(defvar ekt/current-layout nil)
 (defvar ekt/default-layout nil
   "Default system layout to use. Mandatory to set before loading ekt.")
+(defvar ekt/current-translation-map nil)
 
 (defvar ekt/program
   (cond
@@ -98,9 +100,15 @@
 
 (defun ekt/update-key-translation-map ()
   "Substitute `key-translation-map'."
-  (setq key-translation-map
-        (symbol-value
-         (gethash (ekt/get-lang) ekt/key-translation-maps))))
+  (let ((lang (ekt/get-lang)))
+    (if (not (equal ekt/current-layout lang))
+        (progn
+          (setq ekt/current-layout lang)
+          (setq ekt/current-translation-map
+                (symbol-value (gethash ekt/current-layout ekt/translation-maps)))
+          (setq key-translation-map
+                (symbol-value
+                 (gethash ekt/current-layout ekt/key-translation-maps)))))))
 
 (defun ekt/stop-layout-watcher ()
   "Stop automatic `key-translation-map' substitution."
@@ -114,7 +122,7 @@
   "Start automatic `key-translation-map' substitution."
   (interactive)
   (ekt/stop-layout-watcher)
-  (setq ekt/key-translation-map-timer (run-with-timer 0 1 #'ekt/update-key-translation-map)))
+  (setq ekt/key-translation-map-timer (run-with-timer 0 0.5 #'ekt/update-key-translation-map)))
 
 (defun ekt/-split-translation-string (str)
   (split-string str "" t))
@@ -210,15 +218,13 @@ FROM and TO must have the same length"
 (defun ekt/translate-event (prompt)
   "Translate the keyboard event that called this function. used in
 `key-translation-map' substitution maps."
-  (let* ((lang (ekt/get-lang))
-         (map (symbol-value (gethash lang ekt/translation-maps)))
-         (evec (this-single-command-keys))
+  (let* ((evec (this-single-command-keys))
          (e (vector (aref evec (- (length evec) 1)))))
     (if (or (null ekt/default-layout)
-            (string-equal ekt/default-layout lang))
+            (string-equal ekt/default-layout ekt/current-layout))
         e
-      (if (and map ekt/*translate*)
-          (ekt/-translate-event e map)
+      (if (and ekt/current-translation-map ekt/*translate*)
+          (ekt/-translate-event e ekt/current-translation-map)
         e))))
 
 (defun ekt/read-key-wrapper (f &rest args)
