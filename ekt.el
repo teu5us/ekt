@@ -37,6 +37,8 @@
 (require 'cl-lib)
 (require 'subr-x)
 
+(defvar ekt/use-ffi nil)
+(defvar ekt/libxkbswitch nil)
 (defvar ekt/default-layout nil
   "Default system layout to use. Mandatory to set before loading ekt.")
 
@@ -82,13 +84,17 @@
 (defvar ekt/default-key-translation-map (copy-keymap key-translation-map)
   "Backup the `key-translation-map' we have after launching Emacs.")
 (if ekt/default-layout
-  (setf (gethash ekt/default-layout ekt/key-translation-maps)
-        'ekt/default-key-translation-map)
+    (setf (gethash ekt/default-layout ekt/key-translation-maps)
+          'ekt/default-key-translation-map)
   (warn "`ekt/default-layout' not set!"))
 
 (defun ekt/get-lang ()
   "Get system keyboard layout."
-  (string-trim (shell-command-to-string ekt/program)))
+  (if (and ekt/use-ffi
+           (ignore-errors (file-exists-p ekt/libxkbswitch))
+           (fboundp 'ffi-call))
+      (ffi-get-string (ffi-call ekt/libxkbswitch "Xkb_Switch_getXkbLayout" [:pointer]))
+    (string-trim (shell-command-to-string ekt/program))))
 
 (defun ekt/update-key-translation-map ()
   "Substitute `key-translation-map'."

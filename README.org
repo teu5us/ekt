@@ -2,9 +2,11 @@
 
 * Description
 
-Use Emacs and your keyboard layout with xkb-switch.
+Use Emacs and your keyboard layout.
 
-Note: you need xkb-switch to be available in PATH.
+Note: you need xkb-switch or im-select to be available in PATH.
+
+Note 2: you can use libxkbswitch and ffi on linux.
 
 This package helps you build keymaps to substitute ~key-translation-map~.
 
@@ -21,22 +23,24 @@ To start automated key translation, run ~ekt/start-layout-watcher~. To stop,
 execute ~ekt/stop-layout-watcher~. Please note that there may be a delay
 before new ~key-translation-map~ activation.
 
-* Installation
+* Examples
 
-
-** use-package / require
+** use-package
 
 Clone in your ~load-path~ first.
 
-*** require
-#+begin_src emacs-lisp
-(require 'ekt)
-;; optional
-(require 'ekt-ru)
-#+end_src
-
 *** use-package
 #+begin_src emacs-lisp
+(use-package! ekt-ru-qwerty
+  :init
+  (setq ekt/default-layout "us")
+  ;; uncomment for autoswitching
+  ;; :hook (after-init . ekt/start-layout-watcher)
+  :config
+  (ekt-ru-qwerty/make-translation "ru")
+  (setq key-translation-map
+        (symbol-value (gethash "ru" ekt/key-translation-maps))))
+
 ;; autoswitching
 (use-package ekt
     :hook (after-init . ekt/start-layout-watcher)
@@ -62,9 +66,27 @@ Clone in your ~load-path~ first.
 *** config.el
 
 #+begin_src emacs-lisp
-(use-package! ekt
-    :hook (after-init . ekt/start-layout-watcher)
-    ;; optional init
-    :init
-    (require 'ekt-ru))
+(use-package! ekt-ru-qwerty
+  :init
+  (setq ekt/default-layout "us")
+  :config
+  (ekt-ru-qwerty/make-translation "ru")
+  (setq key-translation-map
+        (symbol-value (gethash "ru" ekt/key-translation-maps))))
+#+end_src
+
+** libxkbswitch on linux with doom emacs
+
+#+begin_src emacs-lisp
+(use-package! ekt-ru-qwerty
+  :after ffi
+  :init
+  (setq ekt/libxkbswitch
+        "/nix/store/8g89p11rjj9hbi4hjlp6ysmjf4cxqw7h-xkb-switch-1.8.5/lib/libxkbswitch.so")
+  (setq ekt/use-ffi t)
+  (setq ekt/default-layout "us")
+  :config
+  (ekt-ru-qwerty/make-translation "ru")
+  (setq key-translation-map
+        (symbol-value (gethash "ru" ekt/key-translation-maps))))
 #+end_src
